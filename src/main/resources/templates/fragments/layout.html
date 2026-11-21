@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- =====================  <head> compartilhado  ===================== -->
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' · Controle de Eventos'">Controle de Eventos</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%234f46e5'/%3E%3Cpath d='M10 8v3M22 8v3M7 14h18M12 20l3 3 5-5' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<!-- =====================  Menu lateral  ===================== -->
+<th:block th:fragment="sidebar(ativo)">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+    <aside class="sidebar">
+        <a class="marca" th:href="@{/}">
+            <span class="marca-icone"><svg th:replace="~{fragments/icones :: i('marca')}"></svg></span>
+            <span><strong>Controle de Eventos</strong><small>Gestão acadêmica</small></span>
+        </a>
+
+        <!-- Área do administrador -->
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <p class="nav-titulo">Visão geral</p>
+            <nav class="nav">
+                <a th:href="@{/}" th:classappend="${ativo == 'inicio'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('inicio')}"></svg> Painel
+                </a>
+                <a th:href="@{/relatorios}" th:classappend="${ativo == 'relatorios'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('grafico')}"></svg> Relatórios
+                </a>
+            </nav>
+            <p class="nav-titulo">Gestão</p>
+            <nav class="nav">
+                <a th:href="@{/eventos}" th:classappend="${ativo == 'eventos'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('calendario')}"></svg> Eventos
+                </a>
+                <a th:href="@{/participantes}" th:classappend="${ativo == 'participantes'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('usuarios')}"></svg> Participantes
+                </a>
+                <a th:href="@{/inscricoes}" th:classappend="${ativo == 'inscricoes'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('ticket')}"></svg> Inscrições
+                </a>
+            </nav>
+        </th:block>
+
+        <!-- Área do participante -->
+        <th:block sec:authorize="hasRole('PARTICIPANTE')">
+            <p class="nav-titulo">Minha área</p>
+            <nav class="nav">
+                <a th:href="@{/}" th:classappend="${ativo == 'inicio'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('inicio')}"></svg> Início
+                </a>
+                <a th:href="@{/catalogo}" th:classappend="${ativo == 'catalogo'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('catalogo')}"></svg> Catálogo de eventos
+                </a>
+                <a th:href="@{/meus-eventos}" th:classappend="${ativo == 'meus-eventos'} ? 'ativo'">
+                    <svg th:replace="~{fragments/icones :: i('ticket')}"></svg> Meus eventos
+                </a>
+            </nav>
+        </th:block>
+
+        <div class="sidebar-rodape">Spring Boot · Thymeleaf · PostgreSQL</div>
+    </aside>
+</th:block>
+
+<!-- =====================  Barra superior  ===================== -->
+<header th:fragment="topbar" class="topbar">
+    <label for="nav-toggle" class="topbar-menu" title="Abrir menu">
+        <svg th:replace="~{fragments/icones :: i('menu')}"></svg>
+    </label>
+    <label for="nav-toggle" class="sombra-nav"></label>
+    <div class="topbar-espaco"></div>
+
+    <div class="usuario" sec:authorize="isAuthenticated()">
+        <div class="usuario-info">
+            <strong sec:authentication="name">usuario@email.com</strong>
+            <span sec:authorize="hasRole('ADMIN')">Administrador</span>
+            <span sec:authorize="hasRole('PARTICIPANTE')">Participante</span>
+        </div>
+        <span class="avatar" th:text="${#strings.substring(#authentication.name, 0, 1)}">U</span>
+        <!-- Parte 08: logout por POST, com token CSRF incluído pelo th:action -->
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-fantasma btn-sm" title="Sair do sistema">
+                <svg th:replace="~{fragments/icones :: i('sair')}"></svg> Sair
+            </button>
+        </form>
+    </div>
+</header>
+
+<!-- =====================  Mensagens (flash)  ===================== -->
+<th:block th:fragment="alertas">
+    <div class="alerta alerta-sucesso" th:if="${sucesso}" role="status">
+        <svg th:replace="~{fragments/icones :: i('ok')}"></svg>
+        <span th:text="${sucesso}">Operação realizada.</span>
+    </div>
+    <div class="alerta alerta-erro" th:if="${erro}" role="alert">
+        <svg th:replace="~{fragments/icones :: i('alerta')}"></svg>
+        <span th:text="${erro}">Erro.</span>
+    </div>
+</th:block>
+
+<!-- =====================  Busca e filtros (instantâneos)  =====================
+  Uso: um painel com data-filtro="#idDaLista" contendo campos com data-campo="busca"
+  ou data-campo="<atributo>". Cada item filtrável tem data-busca="texto" e
+  data-<atributo>="valor". data-vazio aponta o aviso de "nenhum resultado".
+-->
+<script th:fragment="filtros-script">
+    (function () {
+        function normalizar(texto) {
+            return (texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+        document.querySelectorAll('[data-filtro]').forEach(function (painel) {
+            var alvo = document.querySelector(painel.getAttribute('data-filtro'));
+            if (!alvo) return;
+            var itens = Array.prototype.slice.call(alvo.querySelectorAll('[data-busca]'));
+            var campos = Array.prototype.slice.call(painel.querySelectorAll('[data-campo]'));
+            var contagem = painel.querySelector('.filtros-contagem');
+            var vazio = document.querySelector(painel.getAttribute('data-vazio'));
+
+            function aplicar() {
+                var visiveis = 0;
+                itens.forEach(function (item) {
+                    var mostrar = campos.every(function (campo) {
+                        var valor = campo.value;
+                        if (!valor) return true;
+                        var chave = campo.getAttribute('data-campo');
+                        if (chave === 'busca') {
+                            return normalizar(item.getAttribute('data-busca')).indexOf(normalizar(valor)) !== -1;
+                        }
+                        return item.getAttribute('data-' + chave) === valor;
+                    });
+                    item.classList.toggle('oculto', !mostrar);
+                    if (mostrar) visiveis++;
+                });
+                if (contagem) contagem.textContent = 'Mostrando ' + visiveis + ' de ' + itens.length;
+                if (vazio) vazio.classList.toggle('oculto', visiveis !== 0);
+            }
+            campos.forEach(function (campo) {
+                campo.addEventListener('input', aplicar);
+                campo.addEventListener('change', aplicar);
+            });
+            aplicar();
+        });
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Participantes')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('participantes')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Gestão</span>
+                <h1>Participantes</h1>
+                <p class="subtitulo" th:text="${#lists.size(participantes)} + ' pessoa(s) cadastrada(s)'">0 pessoas</p>
+            </div>
+            <a class="btn" th:href="@{/participantes/novo}"><svg th:replace="~{fragments/icones :: i('mais')}"></svg> Novo participante</a>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <section class="card" th:unless="${#lists.isEmpty(participantes)}">
+            <div class="filtros" data-filtro="#tabela-participantes" data-vazio="#participantes-sem-resultado">
+                <div class="busca">
+                    <svg th:replace="~{fragments/icones :: i('busca')}"></svg>
+                    <input type="text" data-campo="busca" placeholder="Buscar por nome, e-mail, telefone ou documento..." aria-label="Buscar participantes">
+                </div>
+                <span class="filtros-contagem"></span>
+            </div>
+            <div class="tabela-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Participante</th><th>Telefone</th><th>Documento</th><th class="direita">Ações</th></tr>
+                    </thead>
+                    <tbody id="tabela-participantes">
+                    <tr th:each="participante : ${participantes}"
+                        th:attr="data-busca=${participante.nome + ' ' + participante.email + ' ' + participante.telefone + ' ' + participante.documento}">
+                        <td>
+                            <div class="celula-principal">
+                                <span class="avatar avatar-sm" th:text="${#strings.substring(participante.nome, 0, 1)}">A</span>
+                                <div><strong th:text="${participante.nome}">Nome</strong>
+                                    <small th:text="${participante.email}">email</small></div>
+                            </div>
+                        </td>
+                        <td th:text="${participante.telefone}">telefone</td>
+                        <td th:text="${participante.documento}">documento</td>
+                        <td>
+                            <div class="acoes">
+                                <a class="btn-icone" th:href="@{/participantes/editar/{id}(id=${participante.id})}" title="Editar">
+                                    <svg th:replace="~{fragments/icones :: i('editar')}"></svg>
+                                </a>
+                                <!-- Parte 08: exclusão somente por POST -->
+                                <form th:action="@{/participantes/excluir/{id}(id=${participante.id})}" method="post"
+                                      onsubmit="return confirm('Excluir este participante?');">
+                                    <button class="btn-icone perigo" type="submit" title="Excluir">
+                                        <svg th:replace="~{fragments/icones :: i('lixeira')}"></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="vazio oculto" id="participantes-sem-resultado">
+                <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('busca')}"></svg></div>
+                <h3>Nenhum participante encontrado</h3>
+                <p>Tente outro termo de busca.</p>
+            </div>
+        </section>
+
+        <section class="card vazio" th:if="${#lists.isEmpty(participantes)}">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('usuarios')}"></svg></div>
+            <h3>Nenhum participante cadastrado</h3>
+            <p>Os participantes também são criados automaticamente quando alguém faz o cadastro público.</p>
+            <a class="btn" th:href="@{/participantes/novo}"><svg th:replace="~{fragments/icones :: i('mais')}"></svg> Cadastrar participante</a>
+        </section>
+    </main>
+</div>
+<script th:replace="~{fragments/layout :: filtros-script}"></script>
+</body>
+</html>

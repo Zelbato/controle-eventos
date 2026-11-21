@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Relatórios')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('relatorios')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Visão geral</span>
+                <h1>Relatório geral</h1>
+                <p class="subtitulo">Números consolidados e ocupação de cada evento.</p>
+            </div>
+            <div class="linha nao-imprimir">
+                <button type="button" class="btn btn-secundario" onclick="window.print()">
+                    <svg th:replace="~{fragments/icones :: i('impressora')}"></svg> Imprimir
+                </button>
+                <a class="btn" th:href="@{/relatorios/pdf}">
+                    <svg th:replace="~{fragments/icones :: i('download')}"></svg> Baixar PDF
+                </a>
+            </div>
+        </div>
+
+        <!-- Aparece apenas na impressão -->
+        <div class="so-impressao cabecalho-impressao">
+            <strong>Controle de Eventos · Relatório geral</strong>
+            <span th:text="'Gerado em ' + ${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}">Gerado em</span>
+        </div>
+
+        <section class="indicadores">
+            <article class="card indicador">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('calendario')}"></svg></span>
+                <div><span>Eventos</span><strong th:text="${totalEventos}">0</strong></div>
+            </article>
+            <article class="card indicador tom-ciano">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('usuarios')}"></svg></span>
+                <div><span>Participantes</span><strong th:text="${totalParticipantes}">0</strong></div>
+            </article>
+            <article class="card indicador tom-verde">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('ticket')}"></svg></span>
+                <div><span>Inscrições ativas</span><strong th:text="${totalInscricoes}">0</strong></div>
+            </article>
+            <article class="card indicador tom-ambar">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('historico')}"></svg></span>
+                <div><span>Inscrições (histórico)</span><strong th:text="${totalHistorico}">0</strong></div>
+            </article>
+        </section>
+
+        <section class="card">
+            <div class="card-cabecalho"><div><h2>Ocupação por evento</h2><p>Considera apenas inscrições ativas</p></div></div>
+            <div class="tabela-wrap" th:unless="${#lists.isEmpty(ocupacoes)}">
+                <table>
+                    <thead>
+                    <tr><th>Evento</th><th class="direita">Vagas</th><th class="direita">Inscritos</th><th class="direita">Disponíveis</th><th>Ocupação</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="ocupacao : ${ocupacoes}"
+                        th:with="pct=${ocupacao.vagas > 0 ? ocupacao.inscritos * 100 / ocupacao.vagas : 0}">
+                        <td><strong style="color: var(--texto); font-weight: 600;" th:text="${ocupacao.titulo}">Evento</strong></td>
+                        <td class="direita" th:text="${ocupacao.vagas}">0</td>
+                        <td class="direita" th:text="${ocupacao.inscritos}">0</td>
+                        <td class="direita" th:text="${ocupacao.disponiveis}">0</td>
+                        <td style="width: 28%;">
+                            <div class="ocupacao">
+                                <div class="ocupacao-linha"><span>Preenchido</span><b th:text="${pct} + '%'">0%</b></div>
+                                <div class="barra" th:classappend="${pct >= 100} ? 'cheia'"><span th:style="'width:' + ${pct} + '%'"></span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="vazio" th:if="${#lists.isEmpty(ocupacoes)}">
+                <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('grafico')}"></svg></div>
+                <h3>Sem dados ainda</h3>
+                <p>Cadastre eventos para acompanhar a ocupação aqui.</p>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

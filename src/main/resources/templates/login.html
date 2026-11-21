@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Entrar')}"></head>
+<body>
+<main class="auth">
+    <!-- Painel de apresentação -->
+    <section class="auth-painel">
+        <a class="marca" th:href="@{/login}">
+            <span class="marca-icone"><svg th:replace="~{fragments/icones :: i('marca')}"></svg></span>
+            <span><strong>Controle de Eventos</strong><small>Gestão acadêmica</small></span>
+        </a>
+        <div>
+            <h2>Organize eventos com <em>clareza</em>, do cadastro à presença.</h2>
+            <p class="lead">Inscrições online, controle de vagas em tempo real e histórico completo para cada participante.</p>
+            <ul class="recursos">
+                <li><span><svg th:replace="~{fragments/icones :: i('raio')}"></svg></span> Inscrição em poucos cliques</li>
+                <li><span><svg th:replace="~{fragments/icones :: i('grafico')}"></svg></span> Ocupação das vagas acompanhada ao vivo</li>
+                <li><span><svg th:replace="~{fragments/icones :: i('escudo')}"></svg></span> Acesso seguro com perfis e senhas criptografadas</li>
+            </ul>
+        </div>
+        <small>© Sistema acadêmico de eventos</small>
+    </section>
+
+    <!-- Formulário (Parte 08) -->
+    <section class="auth-form">
+        <div class="auth-caixa">
+            <h1>Bem-vindo de volta</h1>
+            <p class="subtitulo">Entre com seu e-mail e senha para continuar.</p>
+
+            <div class="alerta alerta-erro" th:if="${param.error}">
+                <svg th:replace="~{fragments/icones :: i('alerta')}"></svg>
+                <span>E-mail ou senha inválidos.</span>
+            </div>
+            <div class="alerta alerta-sucesso" th:if="${param.logout}">
+                <svg th:replace="~{fragments/icones :: i('ok')}"></svg>
+                <span>Sessão encerrada com sucesso.</span>
+            </div>
+            <!-- Parte 10: aviso após o cadastro público -->
+            <div class="alerta alerta-sucesso" th:if="${param.cadastro}">
+                <svg th:replace="~{fragments/icones :: i('ok')}"></svg>
+                <span>Conta criada! Entre com seu e-mail e senha.</span>
+            </div>
+
+            <!-- Os nomes username e password são os esperados pelo Spring Security -->
+            <form th:action="@{/login}" method="post">
+                <div class="campo">
+                    <label for="username">E-mail</label>
+                    <input id="username" name="username" type="email"
+                           placeholder="voce@email.com" autocomplete="username" required autofocus>
+                </div>
+                <div class="campo">
+                    <label for="password">Senha</label>
+                    <input id="password" name="password" type="password"
+                           placeholder="••••••••" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-lg btn-bloco">
+                    Entrar <svg th:replace="~{fragments/icones :: i('seta')}"></svg>
+                </button>
+            </form>
+
+            <p class="auth-rodape">Ainda não tem conta? <a th:href="@{/cadastro}">Cadastre-se gratuitamente</a></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Inscritos')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('eventos')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo"
+          th:with="pct=${evento.quantidadeVagas > 0 ? totalInscritos * 100 / evento.quantidadeVagas : 0}">
+        <a class="voltar" th:href="@{/eventos}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar para eventos</a>
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Inscritos do evento</span>
+                <h1 th:text="${evento.titulo}">Evento</h1>
+                <p class="subtitulo" th:text="${#temporals.format(evento.data, 'dd/MM/yyyy')} + ' às ' + ${#temporals.format(evento.hora, 'HH:mm')} + ' · ' + ${evento.local}">data</p>
+            </div>
+            <a class="btn" th:href="@{/inscricoes/nova}"><svg th:replace="~{fragments/icones :: i('mais')}"></svg> Nova inscrição</a>
+        </div>
+
+        <section class="indicadores">
+            <article class="card indicador">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('usuario')}"></svg></span>
+                <div><span>Vagas</span><strong th:text="${evento.quantidadeVagas}">0</strong></div>
+            </article>
+            <article class="card indicador tom-verde">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('ticket')}"></svg></span>
+                <div><span>Inscritos ativos</span><strong th:text="${totalInscritos}">0</strong></div>
+            </article>
+            <article class="card indicador tom-ciano">
+                <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('ok')}"></svg></span>
+                <div><span>Disponíveis</span><strong th:text="${evento.quantidadeVagas - totalInscritos}">0</strong>
+                    <div class="barra" style="margin-top: 8px;" th:classappend="${pct >= 100} ? 'cheia'"><span th:style="'width:' + ${pct} + '%'"></span></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="card" th:unless="${#lists.isEmpty(inscricoes)}">
+            <div class="card-cabecalho"><div><h2>Participantes</h2><p>Inclui inscrições canceladas, para histórico</p></div></div>
+            <div class="tabela-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Participante</th><th>Data da inscrição</th><th>Situação</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="inscricao : ${inscricoes}">
+                        <td>
+                            <div class="celula-principal">
+                                <span class="avatar avatar-sm" th:text="${#strings.substring(inscricao.participante.nome, 0, 1)}">A</span>
+                                <div><strong th:text="${inscricao.participante.nome}">Nome</strong>
+                                    <small th:text="${inscricao.participante.email}">email</small></div>
+                            </div>
+                        </td>
+                        <td th:text="${#temporals.format(inscricao.dataInscricao, 'dd/MM/yyyy HH:mm')}">data</td>
+                        <td><span class="selo" th:classappend="'selo-' + ${inscricao.status}" th:text="${inscricao.status}">ATIVA</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="card vazio" th:if="${#lists.isEmpty(inscricoes)}">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('usuarios')}"></svg></div>
+            <h3>Nenhum participante inscrito</h3>
+            <p>As inscrições feitas pelo catálogo ou pelo painel aparecerão aqui.</p>
+        </section>
+    </main>
+</div>
+</body>
+</html>

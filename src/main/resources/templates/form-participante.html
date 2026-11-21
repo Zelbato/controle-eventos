@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${participante.id == null ? 'Novo participante' : 'Editar participante'})}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('participantes')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <a class="voltar" th:href="@{/participantes}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar para participantes</a>
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Participantes</span>
+                <h1 th:text="${participante.id == null ? 'Novo participante' : 'Editar participante'}">Novo participante</h1>
+                <p class="subtitulo">Informe os dados de contato do participante.</p>
+            </div>
+        </div>
+
+        <div class="form-layout">
+        <section class="card form-card">
+            <div class="card-corpo">
+                <form id="form-participante" th:action="@{/participantes/salvar}" th:object="${participante}" method="post">
+                    <input type="hidden" th:field="*{id}">
+                    <div class="form-grade">
+                        <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('nome')} ? 'campo-erro'">
+                            <label for="nome">Nome completo</label>
+                            <input id="nome" type="text" th:field="*{nome}" placeholder="Ex.: Ana Souza">
+                            <span class="erro" th:errors="*{nome}"></span>
+                        </div>
+                        <div class="campo" th:classappend="${#fields.hasErrors('email')} ? 'campo-erro'">
+                            <label for="email">E-mail</label>
+                            <input id="email" type="email" th:field="*{email}" placeholder="ana@email.com">
+                            <span class="erro" th:errors="*{email}"></span>
+                        </div>
+                        <div class="campo" th:classappend="${#fields.hasErrors('telefone')} ? 'campo-erro'">
+                            <label for="telefone">Telefone</label>
+                            <input id="telefone" type="tel" th:field="*{telefone}" placeholder="(00) 00000-0000">
+                            <span class="erro" th:errors="*{telefone}"></span>
+                        </div>
+                        <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('documento')} ? 'campo-erro'">
+                            <label for="documento">Documento</label>
+                            <input id="documento" type="text" th:field="*{documento}" placeholder="CPF ou RG">
+                            <span class="erro" th:errors="*{documento}"></span>
+                        </div>
+                    </div>
+                    <div class="form-acoes">
+                        <a class="btn btn-secundario" th:href="@{/participantes}">Cancelar</a>
+                        <button type="submit" class="btn">Salvar participante</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Pré-visualização do cartão do participante -->
+        <aside class="preview">
+            <span class="preview-titulo">Pré-visualização</span>
+            <article class="card contato-card">
+                <div class="contato-capa"></div>
+                <div class="contato-corpo">
+                    <span class="avatar" id="pv-avatar">?</span>
+                    <h3 id="pv-nome">Nome do participante</h3>
+                    <span class="selo selo-azul">Participante</span>
+                    <div class="contato-lista">
+                        <span><svg th:replace="~{fragments/icones :: i('usuario')}"></svg> <b id="pv-email" style="font-weight: 500;">e-mail</b></span>
+                        <span><svg th:replace="~{fragments/icones :: i('relogio')}"></svg> <b id="pv-telefone" style="font-weight: 500;">telefone</b></span>
+                        <span><svg th:replace="~{fragments/icones :: i('escudo')}"></svg> <b id="pv-documento" style="font-weight: 500;">documento</b></span>
+                    </div>
+                </div>
+            </article>
+            <p class="preview-nota">Atualiza automaticamente enquanto você digita.</p>
+        </aside>
+        </div>
+    </main>
+</div>
+<script>
+    // Pré-visualização ao vivo do participante
+    (function () {
+        var form = document.getElementById('form-participante');
+        if (!form) return;
+        function valor(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+        function texto(id, conteudo, padrao) {
+            var el = document.getElementById(id);
+            el.textContent = conteudo || padrao;
+            el.classList.toggle('vazio-texto', !conteudo);
+        }
+        function atualizar() {
+            var nome = valor('nome');
+            texto('pv-nome', nome, 'Nome do participante');
+            document.getElementById('pv-avatar').textContent = nome ? nome.charAt(0).toUpperCase() : '?';
+            texto('pv-email', valor('email'), 'e-mail');
+            texto('pv-telefone', valor('telefone'), 'telefone');
+            texto('pv-documento', valor('documento'), 'documento');
+        }
+        form.addEventListener('input', atualizar);
+        atualizar();
+    })();
+</script>
+</body>
+</html>

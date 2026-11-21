@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Catálogo de eventos')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('catalogo')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Inscrições abertas</span>
+                <h1>Catálogo de eventos</h1>
+                <p class="subtitulo">Escolha um evento e garanta sua vaga com um clique.</p>
+            </div>
+            <a class="btn btn-secundario" th:href="@{/meus-eventos}"><svg th:replace="~{fragments/icones :: i('ticket')}"></svg> Meus eventos</a>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <!-- Busca e filtro instantâneos -->
+        <div class="card filtros" th:unless="${#lists.isEmpty(eventos)}"
+             data-filtro="#grade-catalogo" data-vazio="#catalogo-sem-resultado">
+            <div class="busca">
+                <svg th:replace="~{fragments/icones :: i('busca')}"></svg>
+                <input type="text" data-campo="busca" placeholder="Buscar por nome, local ou descrição..." aria-label="Buscar eventos">
+            </div>
+            <select data-campo="situacao" aria-label="Filtrar eventos">
+                <option value="">Todos os eventos</option>
+                <option value="disponivel">Com vagas</option>
+                <option value="inscrito">Já estou inscrito</option>
+                <option value="esgotado">Esgotados</option>
+            </select>
+            <span class="filtros-contagem"></span>
+        </div>
+
+        <section class="grade-eventos" id="grade-catalogo" th:unless="${#lists.isEmpty(eventos)}">
+            <article class="card evento-card" th:each="evento : ${eventos}"
+                     th:with="livres=${vagasDisponiveis[evento.id]},
+                              ocupadas=${evento.quantidadeVagas - vagasDisponiveis[evento.id]},
+                              pct=${evento.quantidadeVagas > 0 ? ocupadas * 100 / evento.quantidadeVagas : 0},
+                              inscricaoId=${minhasInscricoes[evento.id]}"
+                     th:classappend="${inscricaoId != null} ? 'inscrito'"
+                     th:attr="data-busca=${evento.titulo + ' ' + evento.local + ' ' + evento.descricao},
+                              data-situacao=${inscricaoId != null ? 'inscrito' : (livres > 0 ? 'disponivel' : 'esgotado')}">
+                <a class="evento-capa-link" th:href="@{/catalogo/{id}(id=${evento.id})}">
+                    <div class="evento-capa">
+                        <span class="data-badge">
+                            <b th:text="${#temporals.format(evento.data, 'dd')}">12</b>
+                            <i th:text="${#strings.replace(#temporals.format(evento.data, 'MMM'), '.', '')}">dez</i>
+                        </span>
+                        <span class="selo selo-verde" th:if="${inscricaoId != null}">Inscrito</span>
+                        <span class="selo" th:unless="${inscricaoId != null}"
+                              th:classappend="${livres > 0} ? 'selo-verde' : 'selo-vermelho'"
+                              th:text="${livres > 0} ? ${livres} + ' vaga(s)' : 'Esgotado'">10 vagas</span>
+                    </div>
+                </a>
+                <div class="evento-corpo">
+                    <h3><a class="evento-titulo" th:href="@{/catalogo/{id}(id=${evento.id})}" th:text="${evento.titulo}">Evento</a></h3>
+                    <p th:text="${evento.descricao}">Descrição</p>
+                    <div class="meta">
+                        <span><svg th:replace="~{fragments/icones :: i('calendario')}"></svg>
+                            <th:block th:text="${#temporals.format(evento.data, 'dd/MM/yyyy')} + ' às ' + ${#temporals.format(evento.hora, 'HH:mm')}">data</th:block></span>
+                        <span><svg th:replace="~{fragments/icones :: i('local')}"></svg>
+                            <th:block th:text="${evento.local}">Local</th:block></span>
+                    </div>
+                    <div class="evento-rodape">
+                        <div class="ocupacao">
+                            <div class="ocupacao-linha"><span>Vagas preenchidas</span><b th:text="${ocupadas} + '/' + ${evento.quantidadeVagas}">0/0</b></div>
+                            <div class="barra" th:classappend="${pct >= 100} ? 'cheia'"><span th:style="'width:' + ${pct} + '%'"></span></div>
+                        </div>
+
+                        <!-- Já inscrito: aviso + cancelar sem sair do catálogo (Parte 12) -->
+                        <th:block th:if="${inscricaoId != null}">
+                            <div class="inscrito-box"><svg th:replace="~{fragments/icones :: i('ok')}"></svg> Sua vaga está garantida</div>
+                            <div class="acoes-evento">
+                                <a class="btn btn-secundario" th:href="@{/catalogo/{id}(id=${evento.id})}">Detalhes</a>
+                                <form th:action="@{/minhas-inscricoes/{id}/cancelar(id=${inscricaoId})}" method="post"
+                                      onsubmit="return confirm('Cancelar sua inscrição neste evento? A vaga será liberada.');">
+                                    <input type="hidden" name="origem" value="catalogo">
+                                    <button type="submit" class="btn btn-secundario">Cancelar</button>
+                                </form>
+                            </div>
+                        </th:block>
+
+                        <!-- Ainda não inscrito (Parte 11: o participante vem da sessão) -->
+                        <div class="acoes-evento" th:unless="${inscricaoId != null}">
+                            <a class="btn btn-secundario" th:href="@{/catalogo/{id}(id=${evento.id})}">Detalhes</a>
+                            <form th:action="@{/inscricoes/minha}" method="post">
+                                <input type="hidden" name="eventoId" th:value="${evento.id}">
+                                <input type="hidden" name="origem" value="catalogo">
+                                <button type="submit" class="btn" th:disabled="${livres <= 0}"
+                                        th:text="${livres > 0} ? 'Inscrever-me' : 'Esgotado'">Inscrever-me</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="card vazio oculto" id="catalogo-sem-resultado">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('busca')}"></svg></div>
+            <h3>Nenhum evento encontrado</h3>
+            <p>Tente outro termo de busca ou mude o filtro.</p>
+        </section>
+
+        <section class="card vazio" th:if="${#lists.isEmpty(eventos)}">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('calendario')}"></svg></div>
+            <h3>Nenhum evento disponível no momento</h3>
+            <p>Volte mais tarde para conferir os próximos eventos com inscrições abertas.</p>
+        </section>
+    </main>
+</div>
+<script th:replace="~{fragments/layout :: filtros-script}"></script>
+</body>
+</html>

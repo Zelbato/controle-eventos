@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Acesso negado')}"></head>
+<body>
+<main class="centralizado">
+    <section class="card erro-caixa">
+        <div class="vazio-icone" style="margin: 0 auto 18px;"><svg th:replace="~{fragments/icones :: i('cadeado')}"></svg></div>
+        <div class="erro-codigo">403</div>
+        <h1>Acesso negado</h1>
+        <p>Seu perfil não tem permissão para acessar esta página.</p>
+        <a class="btn" th:href="@{/}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar ao início</a>
+    </section>
+</main>
+</body>
+</html>

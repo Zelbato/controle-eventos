@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Criar conta')}"></head>
+<body>
+<main class="auth">
+    <section class="auth-painel">
+        <a class="marca" th:href="@{/login}">
+            <span class="marca-icone"><svg th:replace="~{fragments/icones :: i('marca')}"></svg></span>
+            <span><strong>Controle de Eventos</strong><small>Gestão acadêmica</small></span>
+        </a>
+        <div>
+            <h2>Sua vaga nos melhores eventos <em>começa aqui</em>.</h2>
+            <p class="lead">Crie sua conta de participante e acompanhe todas as suas inscrições em um só lugar.</p>
+            <ul class="recursos">
+                <li><span><svg th:replace="~{fragments/icones :: i('catalogo')}"></svg></span> Catálogo com os eventos abertos</li>
+                <li><span><svg th:replace="~{fragments/icones :: i('ticket')}"></svg></span> Suas inscrições sempre à mão</li>
+                <li><span><svg th:replace="~{fragments/icones :: i('historico')}"></svg></span> Cancele quando precisar, com histórico</li>
+            </ul>
+        </div>
+        <small>© Sistema acadêmico de eventos</small>
+    </section>
+
+    <!-- Parte 10/11: cadastro público (perfil PARTICIPANTE definido pelo servidor) -->
+    <section class="auth-form">
+        <div class="auth-caixa larga">
+            <h1>Criar conta de participante</h1>
+            <p class="subtitulo">Leva menos de um minuto. Todos os campos são obrigatórios.</p>
+
+            <form th:action="@{/cadastro}" th:object="${cadastro}" method="post">
+                <div class="form-grade">
+                    <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('nome')} ? 'campo-erro'">
+                        <label for="nome">Nome completo</label>
+                        <input id="nome" type="text" th:field="*{nome}" placeholder="Ana Souza" autocomplete="name" required>
+                        <span class="erro" th:errors="*{nome}"></span>
+                    </div>
+                    <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('email')} ? 'campo-erro'">
+                        <label for="email">E-mail</label>
+                        <input id="email" type="email" th:field="*{email}" placeholder="ana@email.com" autocomplete="email" required>
+                        <span class="erro" th:errors="*{email}"></span>
+                    </div>
+                    <div class="campo" th:classappend="${#fields.hasErrors('telefone')} ? 'campo-erro'">
+                        <label for="telefone">Telefone</label>
+                        <input id="telefone" type="tel" th:field="*{telefone}" placeholder="(00) 00000-0000" autocomplete="tel" required>
+                        <span class="erro" th:errors="*{telefone}"></span>
+                    </div>
+                    <div class="campo" th:classappend="${#fields.hasErrors('documento')} ? 'campo-erro'">
+                        <label for="documento">Documento</label>
+                        <input id="documento" type="text" th:field="*{documento}" placeholder="CPF ou RG" required>
+                        <span class="erro" th:errors="*{documento}"></span>
+                    </div>
+                    <div class="campo" th:classappend="${#fields.hasErrors('senha')} ? 'campo-erro'">
+                        <label for="senha">Senha</label>
+                        <input id="senha" type="password" th:field="*{senha}" minlength="8" autocomplete="new-password" required>
+                        <span class="dica">Mínimo de 8 caracteres.</span>
+                        <span class="erro" th:errors="*{senha}"></span>
+                    </div>
+                    <div class="campo" th:classappend="${#fields.hasErrors('confirmacaoSenha')} ? 'campo-erro'">
+                        <label for="confirmacaoSenha">Confirmar senha</label>
+                        <input id="confirmacaoSenha" type="password" th:field="*{confirmacaoSenha}" autocomplete="new-password" required>
+                        <span class="erro" th:errors="*{confirmacaoSenha}"></span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-lg btn-bloco">Criar minha conta</button>
+            </form>
+
+            <p class="auth-rodape">Já tem conta? <a th:href="@{/login}">Entrar</a></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Eventos')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('eventos')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Gestão</span>
+                <h1>Eventos</h1>
+                <p class="subtitulo">Cadastre, edite e acompanhe a ocupação de cada evento.</p>
+            </div>
+            <a class="btn" th:href="@{/eventos/novo}"><svg th:replace="~{fragments/icones :: i('mais')}"></svg> Novo evento</a>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <section class="card" th:unless="${#lists.isEmpty(eventos)}">
+            <div class="filtros" data-filtro="#tabela-eventos" data-vazio="#eventos-sem-resultado">
+                <div class="busca">
+                    <svg th:replace="~{fragments/icones :: i('busca')}"></svg>
+                    <input type="text" data-campo="busca" placeholder="Buscar por título ou local..." aria-label="Buscar eventos">
+                </div>
+                <select data-campo="status" aria-label="Filtrar por status">
+                    <option value="">Todos os status</option>
+                    <option value="ABERTO">Abertos</option>
+                    <option value="ENCERRADO">Encerrados</option>
+                    <option value="CANCELADO">Cancelados</option>
+                </select>
+                <select data-campo="periodo" aria-label="Filtrar por período">
+                    <option value="">Qualquer data</option>
+                    <option value="futuro">Próximos</option>
+                    <option value="passado">Já realizados</option>
+                </select>
+                <span class="filtros-contagem"></span>
+            </div>
+            <div class="tabela-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Evento</th>
+                        <th>Local</th>
+                        <th>Status</th>
+                        <th>Ocupação</th>
+                        <th class="direita">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-eventos">
+                    <tr th:each="evento : ${eventos}"
+                        th:attr="data-busca=${evento.titulo + ' ' + evento.local},
+                                 data-status=${evento.status},
+                                 data-periodo=${evento.iniciado ? 'passado' : 'futuro'}"
+                        th:with="ins=${inscritosPorEvento[evento.id]}, pct=${evento.quantidadeVagas > 0 ? ins * 100 / evento.quantidadeVagas : 0}">
+                        <td>
+                            <div class="celula-principal">
+                                <span class="data-mini">
+                                    <b th:text="${#temporals.format(evento.data, 'dd')}">12</b>
+                                    <i th:text="${#strings.replace(#temporals.format(evento.data, 'MMM'), '.', '')}">dez</i>
+                                </span>
+                                <div>
+                                    <strong th:text="${evento.titulo}">Título</strong>
+                                    <small class="truncar" th:text="${#temporals.format(evento.data, 'dd/MM/yyyy')} + ' às ' + ${#temporals.format(evento.hora, 'HH:mm')}">data</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td th:text="${evento.local}">Local</td>
+                        <td><span class="selo" th:classappend="'selo-' + ${evento.status}" th:text="${evento.status}">ABERTO</span></td>
+                        <td>
+                            <div class="ocupacao">
+                                <div class="ocupacao-linha"><span th:text="${pct} + '%'">0%</span><b th:text="${ins} + '/' + ${evento.quantidadeVagas}">0/0</b></div>
+                                <div class="barra" th:classappend="${pct >= 100} ? 'cheia'"><span th:style="'width:' + ${pct} + '%'"></span></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="acoes">
+                                <a class="btn-icone" th:href="@{/eventos/{id}/inscritos(id=${evento.id})}" title="Ver inscritos">
+                                    <svg th:replace="~{fragments/icones :: i('usuarios')}"></svg>
+                                </a>
+                                <a class="btn-icone" th:href="@{/eventos/editar/{id}(id=${evento.id})}" title="Editar">
+                                    <svg th:replace="~{fragments/icones :: i('editar')}"></svg>
+                                </a>
+                                <!-- Parte 08: exclusão somente por POST -->
+                                <form th:action="@{/eventos/excluir/{id}(id=${evento.id})}" method="post"
+                                      onsubmit="return confirm('Excluir este evento?');">
+                                    <button class="btn-icone perigo" type="submit" title="Excluir">
+                                        <svg th:replace="~{fragments/icones :: i('lixeira')}"></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="vazio oculto" id="eventos-sem-resultado">
+                <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('busca')}"></svg></div>
+                <h3>Nenhum evento encontrado</h3>
+                <p>Tente outro termo de busca ou limpe os filtros.</p>
+            </div>
+        </section>
+
+        <section class="card vazio" th:if="${#lists.isEmpty(eventos)}">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('calendario')}"></svg></div>
+            <h3>Nenhum evento cadastrado</h3>
+            <p>Comece criando o primeiro evento da sua agenda.</p>
+            <a class="btn" th:href="@{/eventos/novo}"><svg th:replace="~{fragments/icones :: i('mais')}"></svg> Cadastrar evento</a>
+        </section>
+    </main>
+</div>
+<script th:replace="~{fragments/layout :: filtros-script}"></script>
+</body>
+</html>

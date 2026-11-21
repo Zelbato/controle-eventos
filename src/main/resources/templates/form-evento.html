@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${evento.id == null ? 'Novo evento' : 'Editar evento'})}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('eventos')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <a class="voltar" th:href="@{/eventos}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar para eventos</a>
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Eventos</span>
+                <h1 th:text="${evento.id == null ? 'Novo evento' : 'Editar evento'}">Novo evento</h1>
+                <p class="subtitulo">Preencha as informações que aparecerão no catálogo para os participantes.</p>
+            </div>
+        </div>
+
+        <div class="form-layout">
+        <section class="card form-card">
+            <div class="card-corpo">
+                <form id="form-evento" th:action="@{/eventos/salvar}" th:object="${evento}" method="post">
+                    <input type="hidden" th:field="*{id}">
+                    <div class="form-grade">
+                        <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('titulo')} ? 'campo-erro'">
+                            <label for="titulo">Título</label>
+                            <input id="titulo" type="text" th:field="*{titulo}" placeholder="Ex.: Workshop de Spring Boot">
+                            <span class="erro" th:errors="*{titulo}"></span>
+                        </div>
+                        <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('descricao')} ? 'campo-erro'">
+                            <label for="descricao">Descrição</label>
+                            <textarea id="descricao" th:field="*{descricao}" placeholder="Conte o que os participantes vão encontrar no evento"></textarea>
+                            <span class="erro" th:errors="*{descricao}"></span>
+                        </div>
+                        <div class="campo" th:classappend="${#fields.hasErrors('data')} ? 'campo-erro'">
+                            <label for="data">Data</label>
+                            <input id="data" type="date" th:field="*{data}">
+                            <span class="erro" th:errors="*{data}"></span>
+                        </div>
+                        <div class="campo" th:classappend="${#fields.hasErrors('hora')} ? 'campo-erro'">
+                            <label for="hora">Horário</label>
+                            <input id="hora" type="time" th:field="*{hora}">
+                            <span class="erro" th:errors="*{hora}"></span>
+                        </div>
+                        <div class="campo campo-inteiro" th:classappend="${#fields.hasErrors('local')} ? 'campo-erro'">
+                            <label for="local">Local</label>
+                            <input id="local" type="text" th:field="*{local}" placeholder="Ex.: Auditório principal">
+                            <span class="erro" th:errors="*{local}"></span>
+                        </div>
+                        <div class="campo" th:classappend="${#fields.hasErrors('quantidadeVagas')} ? 'campo-erro'">
+                            <label for="quantidadeVagas">Quantidade de vagas</label>
+                            <input id="quantidadeVagas" type="number" min="1" th:field="*{quantidadeVagas}" placeholder="50">
+                            <span class="erro" th:errors="*{quantidadeVagas}"></span>
+                        </div>
+                        <div class="campo">
+                            <label for="status">Status</label>
+                            <select id="status" th:field="*{status}">
+                                <option value="ABERTO">Aberto para inscrições</option>
+                                <option value="ENCERRADO">Encerrado</option>
+                                <option value="CANCELADO">Cancelado</option>
+                            </select>
+                            <span class="dica">Apenas eventos abertos e futuros aparecem no catálogo.</span>
+                        </div>
+                    </div>
+                    <div class="form-acoes">
+                        <a class="btn btn-secundario" th:href="@{/eventos}">Cancelar</a>
+                        <button type="submit" class="btn" th:text="${evento.id == null ? 'Salvar evento' : 'Salvar alterações'}">Salvar evento</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Pré-visualização: mostra como o evento aparecerá no catálogo -->
+        <aside class="preview">
+            <span class="preview-titulo">Pré-visualização no catálogo</span>
+            <article class="card evento-card">
+                <div class="evento-capa">
+                    <span class="data-badge"><b id="pv-dia">--</b><i id="pv-mes">mês</i></span>
+                    <span class="selo selo-verde" id="pv-status">Aberto</span>
+                </div>
+                <div class="evento-corpo">
+                    <h3 id="pv-titulo">Título do evento</h3>
+                    <p id="pv-descricao">A descrição do evento aparecerá aqui.</p>
+                    <div class="meta">
+                        <span><svg th:replace="~{fragments/icones :: i('calendario')}"></svg> <b id="pv-quando" style="font-weight: 500;">Data e horário</b></span>
+                        <span><svg th:replace="~{fragments/icones :: i('local')}"></svg> <b id="pv-local" style="font-weight: 500;">Local</b></span>
+                    </div>
+                    <div class="evento-rodape">
+                        <div class="ocupacao">
+                            <div class="ocupacao-linha"><span>Vagas preenchidas</span><b id="pv-vagas">0/0</b></div>
+                            <div class="barra"><span style="width: 0%"></span></div>
+                        </div>
+                        <button type="button" class="btn btn-bloco" id="pv-botao" disabled>Inscrever-me</button>
+                    </div>
+                </div>
+            </article>
+            <p class="preview-nota">Atualiza automaticamente enquanto você digita.</p>
+        </aside>
+        </div>
+    </main>
+</div>
+<script>
+    // Pré-visualização ao vivo do evento (sem dependências externas)
+    (function () {
+        var form = document.getElementById('form-evento');
+        if (!form) return;
+        var meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        var status = {
+            ABERTO: ['Aberto', 'selo-verde', 'Inscrever-me'],
+            ENCERRADO: ['Encerrado', 'selo-cinza', 'Inscrições encerradas'],
+            CANCELADO: ['Cancelado', 'selo-vermelho', 'Evento cancelado']
+        };
+        function valor(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+        function texto(id, conteudo, padrao) {
+            var el = document.getElementById(id);
+            el.textContent = conteudo || padrao;
+            el.classList.toggle('vazio-texto', !conteudo);
+        }
+        function atualizar() {
+            texto('pv-titulo', valor('titulo'), 'Título do evento');
+            texto('pv-descricao', valor('descricao'), 'A descrição do evento aparecerá aqui.');
+            texto('pv-local', valor('local'), 'Local');
+
+            var data = valor('data'), hora = valor('hora'), dia = '--', mes = 'mês', quando = '';
+            var partes = data.split('-');
+            if (partes.length === 3) {
+                dia = partes[2];
+                mes = meses[parseInt(partes[1], 10) - 1] || 'mês';
+                quando = partes[2] + '/' + partes[1] + '/' + partes[0];
+            }
+            if (hora) { quando = (quando ? quando + ' às ' : '') + hora.substring(0, 5); }
+            document.getElementById('pv-dia').textContent = dia;
+            document.getElementById('pv-mes').textContent = mes;
+            texto('pv-quando', quando, 'Data e horário');
+
+            var vagas = parseInt(valor('quantidadeVagas'), 10);
+            document.getElementById('pv-vagas').textContent = '0/' + (vagas > 0 ? vagas : 0);
+
+            var st = status[valor('status')] || status.ABERTO;
+            var selo = document.getElementById('pv-status');
+            selo.textContent = st[0];
+            selo.className = 'selo ' + st[1];
+            document.getElementById('pv-botao').textContent = st[2];
+        }
+        form.addEventListener('input', atualizar);
+        form.addEventListener('change', atualizar);
+        atualizar();
+    })();
+</script>
+</body>
+</html>

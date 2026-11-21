@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${evento.titulo})}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('catalogo')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo"
+          th:with="pct=${evento.quantidadeVagas > 0 ? inscritos * 100 / evento.quantidadeVagas : 0}">
+        <a class="voltar" th:href="@{/catalogo}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar para o catálogo</a>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <!-- Capa -->
+        <section class="detalhe-capa">
+            <span class="data-badge">
+                <b th:text="${#temporals.format(evento.data, 'dd')}">12</b>
+                <i th:text="${#strings.replace(#temporals.format(evento.data, 'MMM'), '.', '')}">dez</i>
+            </span>
+            <div style="position: relative; z-index: 1;">
+                <h1 th:text="${evento.titulo}">Evento</h1>
+                <div class="linha">
+                    <span class="selo selo-verde" th:if="${minhaInscricaoId != null}">Você está inscrito</span>
+                    <span class="selo" th:classappend="'selo-' + ${evento.status}" th:text="${evento.status}">ABERTO</span>
+                    <span class="selo selo-azul" th:if="${evento.iniciado}">Evento iniciado</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="detalhe-grade">
+            <!-- Conteúdo -->
+            <div style="display: grid; gap: 22px;">
+                <section class="card">
+                    <div class="card-cabecalho"><h2>Sobre o evento</h2></div>
+                    <div class="card-corpo"><p class="detalhe-texto" th:text="${evento.descricao}">Descrição</p></div>
+                </section>
+
+                <section class="card">
+                    <div class="card-cabecalho"><h2>Informações</h2></div>
+                    <div class="card-corpo info-lista">
+                        <div class="info-item">
+                            <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('calendario')}"></svg></span>
+                            <div><span>Data</span><strong th:text="${#temporals.format(evento.data, 'EEEE, dd/MM/yyyy')}">data</strong></div>
+                        </div>
+                        <div class="info-item">
+                            <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('relogio')}"></svg></span>
+                            <div><span>Horário</span><strong th:text="${#temporals.format(evento.hora, 'HH:mm')}">19:00</strong></div>
+                        </div>
+                        <div class="info-item">
+                            <span class="indicador-icone"><svg th:replace="~{fragments/icones :: i('local')}"></svg></span>
+                            <div><span>Local</span><strong th:text="${evento.local}">Local</strong></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Inscrição -->
+            <aside class="card acao-card">
+                <div class="card-corpo">
+                    <div>
+                        <span class="texto-suave" style="font-size: .84rem;">Vagas disponíveis</span>
+                        <div class="vagas-grande">
+                            <strong th:text="${livres > 0 ? livres : 0}">10</strong>
+                            <span th:text="'de ' + ${evento.quantidadeVagas}">de 40</span>
+                        </div>
+                    </div>
+                    <div class="ocupacao">
+                        <div class="ocupacao-linha"><span>Preenchido</span><b th:text="${pct} + '%'">0%</b></div>
+                        <div class="barra" th:classappend="${pct >= 100} ? 'cheia'"><span th:style="'width:' + ${pct} + '%'"></span></div>
+                    </div>
+
+                    <!-- Já inscrito -->
+                    <th:block th:if="${minhaInscricaoId != null}">
+                        <div class="inscrito-box"><svg th:replace="~{fragments/icones :: i('ok')}"></svg> Sua vaga está garantida</div>
+                        <form th:unless="${evento.iniciado}"
+                              th:action="@{/minhas-inscricoes/{id}/cancelar(id=${minhaInscricaoId})}" method="post"
+                              onsubmit="return confirm('Cancelar sua inscrição neste evento? A vaga será liberada.');">
+                            <input type="hidden" name="origem" value="detalhe">
+                            <input type="hidden" name="eventoId" th:value="${evento.id}">
+                            <button type="submit" class="btn btn-secundario btn-bloco">
+                                <svg th:replace="~{fragments/icones :: i('cancelar')}"></svg> Cancelar inscrição
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- Pode se inscrever -->
+                    <form th:if="${podeInscrever}" th:action="@{/inscricoes/minha}" method="post">
+                        <input type="hidden" name="eventoId" th:value="${evento.id}">
+                        <input type="hidden" name="origem" value="detalhe">
+                        <button type="submit" class="btn btn-lg btn-bloco">Garantir minha vaga</button>
+                    </form>
+
+                    <!-- Não é possível se inscrever -->
+                    <th:block th:if="${minhaInscricaoId == null and !podeInscrever}">
+                        <button type="button" class="btn btn-lg btn-bloco" disabled
+                                th:text="${evento.status.name() != 'ABERTO'} ? 'Inscrições fechadas' : (${evento.iniciado} ? 'Evento já iniciado' : 'Vagas esgotadas')">
+                            Indisponível
+                        </button>
+                    </th:block>
+
+                    <a class="btn btn-fantasma btn-bloco" th:href="@{/meus-eventos}">Ver minhas inscrições</a>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Sobe o PostgreSQL com os mesmos dados de conexão do application.properties.
+# Uso: docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: controle-eventos-db
+    environment:
+      POSTGRES_DB: controle_eventos
+      POSTGRES_USER: eventos_app
+      POSTGRES_PASSWORD: eventos_local_2026
+    ports:
+      - "5434:5432"
+    volumes:
+      - dados-eventos:/var/lib/postgresql/data
+volumes:
+  dados-eventos:

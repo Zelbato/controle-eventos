@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Meus eventos')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('meus-eventos')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Minha conta</span>
+                <h1>Meus eventos</h1>
+                <p class="subtitulo">Suas inscrições, incluindo o histórico de cancelamentos.</p>
+            </div>
+            <a class="btn" th:href="@{/catalogo}"><svg th:replace="~{fragments/icones :: i('catalogo')}"></svg> Ver outros eventos</a>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <section class="card" th:unless="${#lists.isEmpty(inscricoes)}">
+            <div class="tabela-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Evento</th><th>Local</th><th>Inscrito em</th><th>Situação</th><th class="direita">Ação</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="i : ${inscricoes}" th:with="iniciado=${i.evento.iniciado}">
+                        <td>
+                            <div class="celula-principal">
+                                <span class="data-mini">
+                                    <b th:text="${#temporals.format(i.evento.data, 'dd')}">12</b>
+                                    <i th:text="${#strings.replace(#temporals.format(i.evento.data, 'MMM'), '.', '')}">dez</i>
+                                </span>
+                                <div><a class="evento-titulo" th:href="@{/catalogo/{id}(id=${i.evento.id})}"><strong th:text="${i.evento.titulo}">Evento</strong></a>
+                                    <small th:text="${#temporals.format(i.evento.data, 'dd/MM/yyyy')} + ' às ' + ${#temporals.format(i.evento.hora, 'HH:mm')}">data</small></div>
+                            </div>
+                        </td>
+                        <td th:text="${i.evento.local}">Local</td>
+                        <td th:text="${#temporals.format(i.dataInscricao, 'dd/MM/yyyy HH:mm')}">data</td>
+                        <td>
+                            <span class="selo" th:classappend="'selo-' + ${i.status}" th:text="${i.status}">ATIVA</span>
+                            <small style="display: block; margin-top: 4px; color: var(--texto-fraco);"
+                                   th:if="${i.status.name() == 'CANCELADA'}"
+                                   th:text="'em ' + ${#temporals.format(i.dataCancelamento, 'dd/MM/yyyy HH:mm')}">em data</small>
+                        </td>
+                        <td class="direita">
+                            <!-- Parte 12: Cancelar só para inscrições ATIVAS de eventos não iniciados.
+                                 O Service também valida: esconder o botão não substitui a regra. -->
+                            <form th:if="${i.status.name() == 'ATIVA' and !iniciado}"
+                                  th:action="@{/minhas-inscricoes/{id}/cancelar(id=${i.id})}" method="post"
+                                  onsubmit="return confirm('Cancelar esta inscrição? A vaga será liberada.');" style="margin: 0;">
+                                <button type="submit" class="btn btn-secundario btn-sm">
+                                    <svg th:replace="~{fragments/icones :: i('cancelar')}"></svg> Cancelar
+                                </button>
+                            </form>
+                            <span class="selo selo-azul" th:if="${i.status.name() == 'ATIVA' and iniciado}">Evento iniciado</span>
+                            <span class="texto-suave" th:if="${i.status.name() == 'CANCELADA'}">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card vazio" th:if="${#lists.isEmpty(inscricoes)}">
+            <div class="vazio-icone"><svg th:replace="~{fragments/icones :: i('ticket')}"></svg></div>
+            <h3>Você ainda não possui inscrições</h3>
+            <p>Explore o catálogo e garanta sua vaga nos próximos eventos.</p>
+            <a class="btn" th:href="@{/catalogo}"><svg th:replace="~{fragments/icones :: i('catalogo')}"></svg> Explorar catálogo</a>
+        </section>
+    </main>
+</div>
+</body>
+</html>

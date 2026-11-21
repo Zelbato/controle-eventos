@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Nova inscrição')}"></head>
+<body class="app">
+<th:block th:replace="~{fragments/layout :: sidebar('inscricoes')}"></th:block>
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar}"></header>
+    <main class="conteudo">
+        <a class="voltar" th:href="@{/inscricoes}"><svg th:replace="~{fragments/icones :: i('voltar')}"></svg> Voltar para inscrições</a>
+        <div class="pagina-topo">
+            <div>
+                <span class="eyebrow">Inscrições</span>
+                <h1>Nova inscrição</h1>
+                <p class="subtitulo">Inscreva um participante manualmente. As regras de vagas e duplicidade continuam valendo.</p>
+            </div>
+        </div>
+
+        <div class="alerta alerta-erro" th:if="${erro != null}">
+            <svg th:replace="~{fragments/icones :: i('alerta')}"></svg>
+            <span th:text="${erro}">Erro</span>
+        </div>
+
+        <div class="form-layout">
+        <section class="card form-card">
+            <div class="card-corpo">
+                <form id="form-inscricao" th:action="@{/inscricoes/salvar}" th:object="${inscricao}" method="post">
+                    <div class="form-grade">
+                        <div class="campo campo-inteiro">
+                            <label for="evento">Evento</label>
+                            <select id="evento" th:field="*{evento}" required>
+                                <option value="">Selecione um evento</option>
+                                <option th:each="evento : ${eventos}" th:value="${evento.id}"
+                                        th:attr="data-titulo=${evento.titulo},
+                                                 data-quando=${#temporals.format(evento.data, 'dd/MM/yyyy')} + ' às ' + ${#temporals.format(evento.hora, 'HH:mm')},
+                                                 data-local=${evento.local},
+                                                 data-status=${evento.status}"
+                                        th:text="${evento.titulo} + ' — ' + ${#temporals.format(evento.data, 'dd/MM/yyyy')}"></option>
+                            </select>
+                        </div>
+                        <div class="campo campo-inteiro">
+                            <label for="participante">Participante</label>
+                            <select id="participante" th:field="*{participante}" required>
+                                <option value="">Selecione um participante</option>
+                                <option th:each="participante : ${participantes}" th:value="${participante.id}"
+                                        th:attr="data-nome=${participante.nome}, data-email=${participante.email}"
+                                        th:text="${participante.nome} + ' (' + ${participante.email} + ')'"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-acoes">
+                        <a class="btn btn-secundario" th:href="@{/inscricoes}">Cancelar</a>
+                        <button type="submit" class="btn">Salvar inscrição</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Pré-visualização: ingresso da inscrição -->
+        <aside class="preview">
+            <span class="preview-titulo">Pré-visualização do ingresso</span>
+            <article class="card ingresso">
+                <div class="ingresso-topo">
+                    <small>Inscrição em evento</small>
+                    <h3 id="pv-evento">Selecione um evento</h3>
+                    <div class="meta">
+                        <span><svg th:replace="~{fragments/icones :: i('calendario')}"></svg> <b id="pv-quando" style="font-weight: 500;">Data e horário</b></span>
+                        <span><svg th:replace="~{fragments/icones :: i('local')}"></svg> <b id="pv-local" style="font-weight: 500;">Local</b></span>
+                    </div>
+                </div>
+                <div class="ingresso-corte"></div>
+                <div class="ingresso-corpo">
+                    <div class="celula-principal">
+                        <span class="avatar" id="pv-avatar">?</span>
+                        <div><strong id="pv-nome">Selecione um participante</strong><small id="pv-email">e-mail</small></div>
+                    </div>
+                    <div class="ingresso-linha">
+                        <span class="texto-suave" style="font-size: .84rem;">Situação após salvar</span>
+                        <span class="selo selo-ATIVA">ATIVA</span>
+                    </div>
+                    <div class="alerta alerta-info mb-0 oculto" id="pv-aviso" style="font-size: .84rem;">
+                        <svg th:replace="~{fragments/icones :: i('alerta')}"></svg>
+                        <span>Este evento não está aberto: a inscrição será recusada.</span>
+                    </div>
+                </div>
+            </article>
+            <p class="preview-nota">Vagas e duplicidade são conferidas ao salvar.</p>
+        </aside>
+        </div>
+    </main>
+</div>
+<script>
+    // Pré-visualização ao vivo da inscrição
+    (function () {
+        var form = document.getElementById('form-inscricao');
+        if (!form) return;
+        var selEvento = document.getElementById('evento');
+        var selParticipante = document.getElementById('participante');
+        function texto(id, conteudo, padrao) {
+            var el = document.getElementById(id);
+            el.textContent = conteudo || padrao;
+            el.classList.toggle('vazio-texto', !conteudo);
+        }
+        function atualizar() {
+            var ev = selEvento.options[selEvento.selectedIndex];
+            var d = (ev && ev.value) ? ev.dataset : {};
+            texto('pv-evento', d.titulo, 'Selecione um evento');
+            texto('pv-quando', d.quando, 'Data e horário');
+            texto('pv-local', d.local, 'Local');
+            document.getElementById('pv-aviso').classList.toggle('oculto', !d.status || d.status === 'ABERTO');
+
+            var pa = selParticipante.options[selParticipante.selectedIndex];
+            var p = (pa && pa.value) ? pa.dataset : {};
+            texto('pv-nome', p.nome, 'Selecione um participante');
+            texto('pv-email', p.email, 'e-mail');
+            document.getElementById('pv-avatar').textContent = p.nome ? p.nome.charAt(0).toUpperCase() : '?';
+        }
+        form.addEventListener('change', atualizar);
+        atualizar();
+    })();
+</script>
+</body>
+</html>
